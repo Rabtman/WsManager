@@ -1,7 +1,9 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
 
+group = "com.rabtman.wsmanager"
+version = "1.0.0"
 
 android {
     compileSdkVersion 25
@@ -29,12 +31,60 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
 }
 
+task generateSourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+}
+
+task generateJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task generateJavadocsJar(type: Jar, dependsOn: generateJavadocs) {
+    from generateJavadocs.destinationDir
+    classifier 'javadoc'
+}
+
 task makeJar(type: Copy) {
     delete 'build/libs/WsManager.jar'
     from('build/intermediates/bundles/release/')
     into('build/libs/')
     include('classes.jar')
     rename('classes.jar', 'WsManager.jar')
+}
+
+artifacts {
+    archives generateJavaDocsJar
+    archives generateSourcesJar
+}
+
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+
+    pkg {
+        repo = 'WsManager'
+        name = 'com.rabtman.wsmanager'
+
+        version {
+            name = '1.0.0-release'
+            desc = "okhttp websocket manager"
+            vcsTag = '1.0.0'
+        }
+
+        publish = true
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/Rabtman/WsManager.git'
+        websiteUrl = 'https://github.com/Rabtman/WsManager'
+    }
+
+    configurations = ['archives']
+
 }
 
 makeJar.dependsOn(build)
