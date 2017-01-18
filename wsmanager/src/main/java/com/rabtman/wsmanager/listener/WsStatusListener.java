@@ -4,9 +4,8 @@ import okhttp3.Response;
 import okio.ByteString;
 
 /**
- * @author zjm
- * @Description: 可用于监听ws连接状态并进一步拓展
- * @date 2017/1/12
+ * @author rabtman
+ * 可用于监听ws连接状态并进一步拓展
  */
 public abstract class WsStatusListener {
     public void onOpen(Response response) {

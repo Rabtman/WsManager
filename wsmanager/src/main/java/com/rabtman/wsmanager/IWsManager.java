@@ -1,9 +1,8 @@
 package com.rabtman.wsmanager;
 
 /**
- * @author zjm
- * @Description:
- * @date 2017/1/12
+ * @author rabtman
+ *
  */
 
 public interface IWsManager {

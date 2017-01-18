@@ -37,8 +37,9 @@ task generateSourcesJar(type: Jar) {
 }
 
 task generateJavadocs(type: Javadoc) {
+    options.encoding = "utf-8"
     source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    classpath += project.files(configurations.compile.files, android.getBootClasspath().join(File.pathSeparator))
 }
 
 task generateJavadocsJar(type: Jar, dependsOn: generateJavadocs) {
@@ -46,16 +47,8 @@ task generateJavadocsJar(type: Jar, dependsOn: generateJavadocs) {
     classifier 'javadoc'
 }
 
-task makeJar(type: Copy) {
-    delete 'build/libs/WsManager.jar'
-    from('build/intermediates/bundles/release/')
-    into('build/libs/')
-    include('classes.jar')
-    rename('classes.jar', 'WsManager.jar')
-}
-
 artifacts {
-    archives generateJavaDocsJar
+    archives generateJavadocsJar
     archives generateSourcesJar
 }
 
@@ -68,7 +61,7 @@ bintray {
     key = properties.getProperty("bintray.apikey")
 
     pkg {
-        repo = 'WsManager'
+        repo = 'maven'
         name = 'com.rabtman.wsmanager'
 
         version {
@@ -77,7 +70,6 @@ bintray {
             vcsTag = '1.0.0'
         }
 
-        publish = true
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/Rabtman/WsManager.git'
         websiteUrl = 'https://github.com/Rabtman/WsManager'
@@ -87,6 +79,13 @@ bintray {
 
 }
 
-makeJar.dependsOn(build)
+/*task makeJar(type: Copy) {
+    delete 'build/libs/WsManager.jar'
+    from('build/intermediates/bundles/release/')
+    into('build/libs/')
+    include('classes.jar')
+    rename('classes.jar', 'WsManager.jar')
+}
+makeJar.dependsOn(build)*/
 //在终端执行生成JAR包
 // gradlew makeJar

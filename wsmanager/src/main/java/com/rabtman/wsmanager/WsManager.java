@@ -19,9 +19,8 @@ import okhttp3.WebSocketListener;
 import okio.ByteString;
 
 /**
- * @author zjm
- * @Description:
- * @date 2017/1/12
+ * @author rabtman
+ *
  */
 
 public class WsManager implements IWsManager {
@@ -39,6 +38,12 @@ public class WsManager implements IWsManager {
     private Lock mLock;
     private Handler wsHandler = new Handler(Looper.getMainLooper());
     private int reconnectCount = 0;   //重连次数
+    private Runnable reconnectRunnable = new Runnable() {
+        @Override
+        public void run() {
+            buildConnect();
+        }
+    };
     private WebSocketListener mWebSocketListener = new WebSocketListener() {
 
         @Override
@@ -75,12 +80,6 @@ public class WsManager implements IWsManager {
         public void onFailure(WebSocket webSocket, Throwable t, Response response) {
             tryReconnect();
             if (wsStatusListener != null) wsStatusListener.onFailure(t, response);
-        }
-    };
-    private Runnable reconnectRunnable = new Runnable() {
-        @Override
-        public void run() {
-            buildConnect();
         }
     };
 
