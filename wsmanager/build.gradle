@@ -2,9 +2,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
-group = "com.rabtman.wsmanager"
-version = "1.0.0"
-
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.0"
@@ -13,7 +10,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 25
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
     }
     buildTypes {
         release {
@@ -31,13 +28,45 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
 }
 
+Properties properties = new Properties()
+File localPropertiesFile = project.rootProject.file("local.properties");
+if (localPropertiesFile.exists()) {
+    properties.load(localPropertiesFile.newDataInputStream())
+}
+File projectPropertiesFile = project.file("project.properties");
+if (projectPropertiesFile.exists()) {
+    properties.load(projectPropertiesFile.newDataInputStream())
+}
+
+//读取属性
+def projectRepositoryName = properties.getProperty("project.repositoryName")
+def projectName = properties.getProperty("project.name")
+def projectGroupId = properties.getProperty("project.groupId")
+def projectArtifactId = properties.getProperty("project.artifactId")
+def projectVersionName = android.defaultConfig.versionName
+def projectPackaging = properties.getProperty("project.packaging")
+def projectSiteUrl = properties.getProperty("project.siteUrl")
+def projectGitUrl = properties.getProperty("project.gitUrl")
+
+def developerId = properties.getProperty("developer.id")
+def developerName = properties.getProperty("developer.name")
+def developerEmail = properties.getProperty("developer.email")
+
+def bintrayUser = properties.getProperty("bintray.user")
+def bintrayApikey = properties.getProperty("bintray.apikey")
+def bintrayOrganizationId = properties.getProperty("bintray.organizationId");
+
+def javadocName = properties.getProperty("javadoc.name")
+
+group = projectGroupId
+version = projectVersionName
+
 task generateSourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier 'sources'
 }
 
 task generateJavadocs(type: Javadoc) {
-    options.encoding = "utf-8"
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(configurations.compile.files, android.getBootClasspath().join(File.pathSeparator))
 }
@@ -47,36 +76,74 @@ task generateJavadocsJar(type: Jar, dependsOn: generateJavadocs) {
     classifier 'javadoc'
 }
 
+generateJavadocs {
+    options {
+        encoding "UTF-8"
+        charSet 'UTF-8'
+        author true
+        links "http://docs.oracle.com/javase/7/docs/api"
+        title javadocName
+    }
+}
+
 artifacts {
     archives generateJavadocsJar
     archives generateSourcesJar
 }
 
-
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
+// 配置生成POM.xml文件的参数
+install {
+    repositories.mavenInstaller {
+        pom {
+            project {
+                name projectName
+                groupId projectGroupId
+                artifactId projectArtifactId
+                version projectVersionName
+                packaging projectPackaging
+                url projectSiteUrl
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id developerId
+                        name developerName
+                        email developerEmail
+                    }
+                }
+                scm {
+                    connection projectGitUrl
+                    developerConnection projectGitUrl
+                    url projectSiteUrl
+                }
+            }
+        }
+    }
+}
 
 bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.apikey")
+    user = bintrayUser
+    key = bintrayApikey
 
     pkg {
-        repo = 'maven'
-        name = 'com.rabtman.wsmanager'
-
+        userOrg = bintrayOrganizationId
+        repo = projectRepositoryName
+        name = projectName
+        websiteUrl = projectSiteUrl
+        vcsUrl = projectGitUrl
+        licenses = ["Apache-2.0"]
+        publish = true
         version {
             name = '1.0.0-release'
             desc = "okhttp websocket manager"
-            vcsTag = '1.0.0'
+            vcsTag = projectVersionName
         }
-
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/Rabtman/WsManager.git'
-        websiteUrl = 'https://github.com/Rabtman/WsManager'
     }
-
     configurations = ['archives']
-
 }
 
 /*task makeJar(type: Copy) {

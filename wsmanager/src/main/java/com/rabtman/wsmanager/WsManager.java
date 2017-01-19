@@ -38,12 +38,6 @@ public class WsManager implements IWsManager {
     private Lock mLock;
     private Handler wsHandler = new Handler(Looper.getMainLooper());
     private int reconnectCount = 0;   //重连次数
-    private Runnable reconnectRunnable = new Runnable() {
-        @Override
-        public void run() {
-            buildConnect();
-        }
-    };
     private WebSocketListener mWebSocketListener = new WebSocketListener() {
 
         @Override
@@ -80,6 +74,12 @@ public class WsManager implements IWsManager {
         public void onFailure(WebSocket webSocket, Throwable t, Response response) {
             tryReconnect();
             if (wsStatusListener != null) wsStatusListener.onFailure(t, response);
+        }
+    };
+    private Runnable reconnectRunnable = new Runnable() {
+        @Override
+        public void run() {
+            buildConnect();
         }
     };
 
