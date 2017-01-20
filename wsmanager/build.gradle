@@ -54,7 +54,6 @@ def developerEmail = properties.getProperty("developer.email")
 
 def bintrayUser = properties.getProperty("bintray.user")
 def bintrayApikey = properties.getProperty("bintray.apikey")
-def bintrayOrganizationId = properties.getProperty("bintray.organizationId");
 
 def javadocName = properties.getProperty("javadoc.name")
 
@@ -130,7 +129,6 @@ bintray {
     key = bintrayApikey
 
     pkg {
-        userOrg = bintrayOrganizationId
         repo = projectRepositoryName
         name = projectName
         websiteUrl = projectSiteUrl
@@ -138,8 +136,8 @@ bintray {
         licenses = ["Apache-2.0"]
         publish = true
         version {
-            name = '1.0.0-release'
-            desc = "okhttp websocket manager"
+            name = projectVersionName + '-release'
+            desc = "okhttp websocket manager " + projectVersionName
             vcsTag = projectVersionName
         }
     }
