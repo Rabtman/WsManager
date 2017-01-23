@@ -1,1 +1,1 @@
-include ':app', ':wsmanager'
+include ':app', ':wsmanager', ':okhttp-ws-example'

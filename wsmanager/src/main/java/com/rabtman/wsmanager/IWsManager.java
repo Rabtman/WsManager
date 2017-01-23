@@ -1,16 +1,24 @@
 package com.rabtman.wsmanager;
 
+import okhttp3.WebSocket;
+import okio.ByteString;
+
 /**
  * @author rabtman
- *
  */
 
-public interface IWsManager {
-    void connected();
+interface IWsManager {
+    WebSocket getWebSocket();
 
-    void disconnected();
+    void startConnect();
 
-    void buildConnect();
+    void stopConnect();
 
-    void sendMessage(String msg);
+    boolean isWsConnected();
+
+    int getCurrentStatus();
+
+    boolean sendMessage(String msg);
+
+    boolean sendMessage(ByteString byteString);
 }

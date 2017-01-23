@@ -20,7 +20,6 @@ import okio.ByteString;
 
 /**
  * @author rabtman
- *
  */
 
 public class WsManager implements IWsManager {
@@ -32,18 +31,25 @@ public class WsManager implements IWsManager {
     private WebSocket mWebSocket;
     private OkHttpClient mOkHttpClient;
     private Request mRequest;
-    private ConnectStatus mCurrentStatus = ConnectStatus.DISCONNECTED;
+    private int mCurrentStatus = WsStatus.DISCONNECTED;
     private boolean isNeedReconnect = true;
     private WsStatusListener wsStatusListener;
     private Lock mLock;
     private Handler wsHandler = new Handler(Looper.getMainLooper());
     private int reconnectCount = 0;   //重连次数
+    private Runnable reconnectRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (wsStatusListener != null) wsStatusListener.onReconnect();
+            buildConnect();
+        }
+    };
     private WebSocketListener mWebSocketListener = new WebSocketListener() {
 
         @Override
         public void onOpen(WebSocket webSocket, Response response) {
             mWebSocket = webSocket;
-            mCurrentStatus = ConnectStatus.CONNECTED;
+            mCurrentStatus = WsStatus.CONNECTED;
             connected();
             if (wsStatusListener != null) wsStatusListener.onOpen(response);
         }
@@ -65,8 +71,6 @@ public class WsManager implements IWsManager {
 
         @Override
         public void onClosed(WebSocket webSocket, int code, String reason) {
-            mCurrentStatus = ConnectStatus.DISCONNECTED;
-            disconnected();
             if (wsStatusListener != null) wsStatusListener.onClosed(code, reason);
         }
 
@@ -74,12 +78,6 @@ public class WsManager implements IWsManager {
         public void onFailure(WebSocket webSocket, Throwable t, Response response) {
             tryReconnect();
             if (wsStatusListener != null) wsStatusListener.onFailure(t, response);
-        }
-    };
-    private Runnable reconnectRunnable = new Runnable() {
-        @Override
-        public void run() {
-            buildConnect();
         }
     };
 
@@ -113,6 +111,7 @@ public class WsManager implements IWsManager {
         }
     }
 
+    @Override
     public WebSocket getWebSocket() {
         return mWebSocket;
     }
@@ -122,31 +121,31 @@ public class WsManager implements IWsManager {
         this.wsStatusListener = wsStatusListener;
     }
 
-
+    @Override
     public boolean isWsConnected() {
-        return mCurrentStatus == ConnectStatus.CONNECTED;
+        return mCurrentStatus == WsStatus.CONNECTED;
     }
 
-    public ConnectStatus getCurrentStatus() {
+    @Override
+    public int getCurrentStatus() {
         return mCurrentStatus;
     }
 
+    @Override
     public void startConnect() {
         isNeedReconnect = true;
-        if (mCurrentStatus == ConnectStatus.CONNECTED | mCurrentStatus == ConnectStatus.CONNECTING | !isNetworkConnected(mContext))
-            return;
         buildConnect();
     }
 
+    @Override
     public void stopConnect() {
         isNeedReconnect = false;
-        if (mCurrentStatus == ConnectStatus.DISCONNECTED) return;
-        disconnected();
+        disconnect();
     }
 
-    public void tryReconnect() {
+    private void tryReconnect() {
         if (!isNeedReconnect) return;
-        mCurrentStatus = ConnectStatus.RECONNECT;
+        mCurrentStatus = WsStatus.RECONNECT;
 
         if (!isNetworkConnected(mContext)) return;
 
@@ -155,38 +154,62 @@ public class WsManager implements IWsManager {
         reconnectCount++;
     }
 
-    public void cancelReconnect() {
+    private void cancelReconnect() {
         wsHandler.removeCallbacks(reconnectRunnable);
         reconnectCount = 0;
     }
 
-    @Override
-    public void connected() {
+    private void connected() {
         cancelReconnect();
     }
 
-    @Override
-    public void disconnected() {
+    private void disconnect() {
+        if (mCurrentStatus == WsStatus.DISCONNECTED) return;
         cancelReconnect();
         if (mOkHttpClient != null) mOkHttpClient.dispatcher().cancelAll();
-        mWebSocket = null;
+        if (mWebSocket != null) {
+            boolean isClosed = mWebSocket.close(WsStatus.CODE.NORMAL_CLOSE, WsStatus.TIP.NORMAL_CLOSE);
+            //非正常关闭连接
+            if (!isClosed) {
+                if (wsStatusListener != null)
+                    wsStatusListener.onClosed(WsStatus.CODE.ABNORMAL_CLOSE, WsStatus.TIP.ABNORMAL_CLOSE);
+            }
+        }
+        mCurrentStatus = WsStatus.DISCONNECTED;
     }
 
-    @Override
-    public void buildConnect() {
-        mCurrentStatus = ConnectStatus.CONNECTING;
+    private void buildConnect() {
+        if (mCurrentStatus == WsStatus.CONNECTED | mCurrentStatus == WsStatus.CONNECTING | !isNetworkConnected(mContext))
+            return;
+        mCurrentStatus = WsStatus.CONNECTING;
         initWebSocket();
     }
 
     //发送消息
     @Override
-    public void sendMessage(String msg) {
-        if (mWebSocket != null && mCurrentStatus == ConnectStatus.CONNECTED) {
-            boolean isSend = mWebSocket.send(msg);
-            if (isSend) return;
-        }
+    public boolean sendMessage(String msg) {
+        return send(msg);
+    }
 
-        tryReconnect();
+    @Override
+    public boolean sendMessage(ByteString byteString) {
+        return send(byteString);
+    }
+
+    private boolean send(Object msg) {
+        boolean isSend = false;
+        if (mWebSocket != null && mCurrentStatus == WsStatus.CONNECTED) {
+            if (msg instanceof String) {
+                isSend = mWebSocket.send((String) msg);
+            } else if (msg instanceof ByteString) {
+                isSend = mWebSocket.send((ByteString) msg);
+            }
+            //发送消息失败，尝试重连
+            if (!isSend) {
+                tryReconnect();
+            }
+        }
+        return isSend;
     }
 
     //检查网络是否连接

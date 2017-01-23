@@ -17,6 +17,9 @@ public abstract class WsStatusListener {
     public void onMessage(ByteString bytes) {
     }
 
+    public void onReconnect() {
+
+    }
 
     public void onClosing(int code, String reason) {
     }
