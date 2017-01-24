@@ -4,7 +4,7 @@ A library that simplifies the use of OkHttp Websocket.
 
 For more information, please see:
 
-http://zhangjm05.coding.me/2017/01/21/okhttp-websocket-%E4%BD%BF%E7%94%A8%E7%AF%87/
+https://zhangjm05.coding.me/2017/01/21/okhttp_ws_use/
 
 ## Download
 
