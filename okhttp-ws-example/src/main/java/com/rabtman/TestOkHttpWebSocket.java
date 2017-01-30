@@ -74,6 +74,10 @@ public class TestOkHttpWebSocket {
             }
 
             @Override
+            public void onMessage(WebSocket webSocket, ByteString bytes) {
+            }
+
+            @Override
             public void onClosing(WebSocket webSocket, int code, String reason) {
                 System.out.println("client onClosing");
                 System.out.println("code:" + code + " reason:" + reason);
