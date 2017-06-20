@@ -1,12 +1,12 @@
-#WsManager
+# WsManager
 
 A library that simplifies the use of OkHttp Websocket.
 
 For more information, please see:
 
-https://zhangjm05.coding.me/2017/01/21/okhttp_ws_use/
+https://rabtman.com/2017/01/21/okhttp_ws_use/
 
-https://zhangjm05.coding.me/2017/01/28/okhttp_ws_source/
+https://rabtman.com/2017/01/28/okhttp_ws_source/
 
 ## Download
 
