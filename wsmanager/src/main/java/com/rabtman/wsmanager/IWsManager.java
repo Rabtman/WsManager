@@ -8,17 +8,20 @@ import okio.ByteString;
  */
 
 interface IWsManager {
-    WebSocket getWebSocket();
 
-    void startConnect();
+  WebSocket getWebSocket();
 
-    void stopConnect();
+  void startConnect();
 
-    boolean isWsConnected();
+  void stopConnect();
 
-    int getCurrentStatus();
+  boolean isWsConnected();
 
-    boolean sendMessage(String msg);
+  int getCurrentStatus();
 
-    boolean sendMessage(ByteString byteString);
+  void setCurrentStatus(int currentStatus);
+
+  boolean sendMessage(String msg);
+
+  boolean sendMessage(ByteString byteString);
 }
