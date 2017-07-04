@@ -12,19 +12,19 @@ https://rabtman.com/2017/01/28/okhttp_ws_source/
 
 Maven:
 
-```
+```xml
 <dependency>
   <groupId>com.rabtman.wsmanager</groupId>
   <artifactId>wsmanager</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <type>pom</type>
 </dependency>
 ```
 
 or Gradle:
 
-```
-compile 'com.rabtman.wsmanager:wsmanager:1.0.1'
+```groovy
+compile 'com.rabtman.wsmanager:wsmanager:1.0.2'
 ```
 
 ## How to use
@@ -32,10 +32,13 @@ compile 'com.rabtman.wsmanager:wsmanager:1.0.1'
 Instantiate a WsManager object:
 
 ```
-OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .build();
+OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                      .pingInterval(15, TimeUnit.SECONDS)
+                      .retryOnConnectionFailure(true)
+                      .build();
 WsManager wsManager = new WsManager.Builder(this)
                 .wsUrl("ws://localhost:2333/")
+                .needReconnect(true)
                 .client(okHttpClient)
                 .build();
 ```
@@ -99,6 +102,10 @@ Close the connection to the server:
 ```
 wsManager.stopConnect();
 ```
+
+## Preview
+
+![](https://github.com/Rabtman/WsManager/raw/master/screenshots/ws.gif)
 
 ## License
 
