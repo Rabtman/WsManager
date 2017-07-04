@@ -21,29 +21,47 @@ import okio.ByteString;
 
 public class WsManager implements IWsManager {
 
-  //重连相关
-  private final static int RECONNECT_INTERVAL = 10 * 1000;
-  private final static long RECONNECT_MAX_TIME = 120 * 1000;
+  private final static int RECONNECT_INTERVAL = 10 * 1000;    //重连自增步长
+  private final static long RECONNECT_MAX_TIME = 120 * 1000;   //最大重连间隔
   private Context mContext;
   private String wsUrl;
   private WebSocket mWebSocket;
   private OkHttpClient mOkHttpClient;
   private Request mRequest;
-  private int mCurrentStatus = WsStatus.DISCONNECTED;
-  private boolean isNeedReconnect = true;
+  private int mCurrentStatus = WsStatus.DISCONNECTED;     //websocket连接状态
+  private boolean isNeedReconnect;          //是否需要断线自动重连
+  private boolean isManualClose = false;         //是否为手动关闭websocket连接
   private WsStatusListener wsStatusListener;
   private Lock mLock;
   private Handler wsMainHandler = new Handler(Looper.getMainLooper());
   private int reconnectCount = 0;   //重连次数
+  private Runnable reconnectRunnable = new Runnable() {
+    @Override
+    public void run() {
+      if (wsStatusListener != null) {
+        wsStatusListener.onReconnect();
+      }
+      buildConnect();
+    }
+  };
   private WebSocketListener mWebSocketListener = new WebSocketListener() {
 
     @Override
-    public void onOpen(WebSocket webSocket, Response response) {
+    public void onOpen(WebSocket webSocket, final Response response) {
       mWebSocket = webSocket;
       setCurrentStatus(WsStatus.CONNECTED);
       connected();
       if (wsStatusListener != null) {
-        wsStatusListener.onOpen(response);
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+          wsMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+              wsStatusListener.onOpen(response);
+            }
+          });
+        } else {
+          wsStatusListener.onOpen(response);
+        }
       }
     }
 
@@ -80,40 +98,59 @@ public class WsManager implements IWsManager {
     }
 
     @Override
-    public void onClosing(WebSocket webSocket, int code, String reason) {
+    public void onClosing(WebSocket webSocket, final int code, final String reason) {
       if (wsStatusListener != null) {
-        wsStatusListener.onClosing(code, reason);
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+          wsMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+              wsStatusListener.onClosing(code, reason);
+            }
+          });
+        } else {
+          wsStatusListener.onClosing(code, reason);
+        }
       }
     }
 
     @Override
-    public void onClosed(WebSocket webSocket, int code, String reason) {
+    public void onClosed(WebSocket webSocket, final int code, final String reason) {
       if (wsStatusListener != null) {
-        wsStatusListener.onClosed(code, reason);
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+          wsMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+              wsStatusListener.onClosed(code, reason);
+            }
+          });
+        } else {
+          wsStatusListener.onClosed(code, reason);
+        }
       }
     }
 
     @Override
-    public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+    public void onFailure(WebSocket webSocket, final Throwable t, final Response response) {
       tryReconnect();
       if (wsStatusListener != null) {
-        wsStatusListener.onFailure(t, response);
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+          wsMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+              wsStatusListener.onFailure(t, response);
+            }
+          });
+        } else {
+          wsStatusListener.onFailure(t, response);
+        }
       }
-    }
-  };
-  private Runnable reconnectRunnable = new Runnable() {
-    @Override
-    public void run() {
-      if (wsStatusListener != null) {
-        wsStatusListener.onReconnect();
-      }
-      buildConnect();
     }
   };
 
   public WsManager(Builder builder) {
     mContext = builder.mContext;
     wsUrl = builder.wsUrl;
+    isNeedReconnect = builder.needReconnect;
     mOkHttpClient = builder.mOkHttpClient;
     this.mLock = new ReentrantLock();
   }
@@ -168,18 +205,18 @@ public class WsManager implements IWsManager {
 
   @Override
   public void startConnect() {
-    isNeedReconnect = true;
+    isManualClose = false;
     buildConnect();
   }
 
   @Override
   public void stopConnect() {
-    isNeedReconnect = false;
+    isManualClose = true;
     disconnect();
   }
 
   private void tryReconnect() {
-    if (!isNeedReconnect) {
+    if (!isNeedReconnect | isManualClose) {
       return;
     }
 
@@ -230,7 +267,6 @@ public class WsManager implements IWsManager {
       setCurrentStatus(WsStatus.DISCONNECTED);
       return;
     }
-    int status = getCurrentStatus();
     switch (getCurrentStatus()) {
       case WsStatus.CONNECTED:
       case WsStatus.CONNECTING:
@@ -286,6 +322,7 @@ public class WsManager implements IWsManager {
 
     private Context mContext;
     private String wsUrl;
+    private boolean needReconnect = true;
     private OkHttpClient mOkHttpClient;
 
     public Builder(Context val) {
@@ -299,6 +336,11 @@ public class WsManager implements IWsManager {
 
     public Builder client(OkHttpClient val) {
       mOkHttpClient = val;
+      return this;
+    }
+
+    public Builder needReconnect(boolean val) {
+      needReconnect = val;
       return this;
     }
 

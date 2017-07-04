@@ -1,17 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_main"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/activity_main"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:paddingTop="@dimen/activity_vertical_margin"
+  android:paddingLeft="@dimen/activity_horizontal_margin"
+  android:paddingRight="@dimen/activity_horizontal_margin"
+  android:focusableInTouchMode="true"
+  tools:context="com.rabtman.wsdemo.MainActivity">
+
+  <Button
+    android:id="@+id/btn_disconnect"
+    android:layout_width="60dp"
+    android:layout_height="40dp"
+    android:layout_alignParentRight="true"
+    android:text="断开"
+    android:textSize="12sp" />
+
+  <Button
+    android:id="@+id/btn_connect"
+    android:layout_width="60dp"
+    android:layout_height="40dp"
+    android:layout_toLeftOf="@id/btn_disconnect"
+    android:text="连接"
+    android:textSize="12sp" />
+
+  <EditText
+    android:id="@+id/edit_url"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_toLeftOf="@id/btn_connect"
+    android:text="ws://121.40.165.18:8088" />
+
+  <TextView
+    android:id="@+id/btn_clear"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:layout_alignParentRight="true"
+    android:padding="8dp"
+    android:drawableTop="@drawable/ic_clear"
+    android:text="清空"
+    android:textColor="#9E9E9E" />
+
+  <TextView
+    android:id="@+id/btn_send"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:layout_toLeftOf="@id/btn_clear"
+    android:padding="8dp"
+    android:drawablePadding="4dp"
+    android:drawableTop="@drawable/ic_send_grey"
+    android:text="发送"
+    android:textColor="#9E9E9E" />
+
+  <EditText
+    android:id="@+id/edit_content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:layout_alignParentBottom="true"
+    android:layout_toLeftOf="@id/btn_send" />
+
+  <ScrollView
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.rabtman.wsdemo.MainActivity">
-
+    android:layout_above="@id/edit_content"
+    android:layout_below="@id/edit_url">
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
+      android:id="@+id/tv_content"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:lineSpacingExtra="4dp"
+      android:textSize="14sp"
+      tools:text="你好啊\n 我很好啊 \n" />
+  </ScrollView>
 </RelativeLayout>
