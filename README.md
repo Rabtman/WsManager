@@ -4,9 +4,9 @@ A library that simplifies the use of OkHttp Websocket.
 
 For more information, please see:
 
-https://rabtman.com/2017/01/21/okhttp_ws_use/
+https://blog.rabtman.com/2017/01/21/okhttp_ws_use/
 
-https://rabtman.com/2017/01/28/okhttp_ws_source/
+https://blog.rabtman.com/2017/01/28/okhttp_ws_source/
 
 ## Download
 
