@@ -1,7 +1,7 @@
 package com.rabtman.wsmanager;
 
 /**
- * @author zjm
+ * @author rabtman
  */
 
 public class WsStatus {
